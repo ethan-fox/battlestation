@@ -106,22 +106,38 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-
-alias dclean="docker rm $(docker ps -a -f status=exited -q)" # THIS DOES NOT WORK
+alias d="docker"
+alias k="kubectl"
 dlogs() {
-  docker logs -f $1
+  d logs -f $1
 }
-alias dps="docker ps"
-alias dpsa="docker ps -a"
+dprune() { # Remove all exited containers
+  dead_containers=()
+  while IFS= read -r line; do
+      dead_containers+=( "$line" )
+  done < <( dpsa -f status=exited -q )
+  for i in $dead_containers
+  do
+    d rm $i
+  done
+}
+alias dps="d ps"
+alias dpsa="d ps -a"
 alias gs="git status"
+gtrc(){
+  git tag -a rc/$(date +"%Y%m%d%H%M") -m $1 $2
+}
+gtpr(){
+  git tag -a release/$(date +"%Y%m%d%H%M") -m $1 $2
+}
 kcs(){
-  kubectl config use-context $1
+  k config use-context $1
 }
 klogs() {
-  kubectl logs -f $1
+  k logs -f $1
 }
-alias kgp="kubectl get pods"
-alias pharmlogs="docker logs -f $(dps | grep pharmakon_api | awk '{ print substr($1, /(\w+)?/) }')"
+alias kgp="k get pods"
+alias pharmlogs="d logs -f $(dps | grep pharmakon-dev | awk '{ print substr($1, /(\w+)?/) }')"
 sandbox() {
   read "answer?Are you sure? (yn) "
   echo    # (optional) move to a new line
