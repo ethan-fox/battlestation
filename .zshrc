@@ -106,8 +106,9 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+
+# Containerz
 alias d="docker"
-alias k="kubectl"
 dlogs() {
   d logs -f $1
 }
@@ -123,24 +124,41 @@ dprune() { # Remove all exited containers
 }
 alias dps="d ps"
 alias dpsa="d ps -a"
-alias gs="git status"
-gtrc(){
-  git tag -a rc/$(date +"%Y%m%d%H%M") -m $1 $2
-}
-gtpr(){
-  git tag -a release/$(date +"%Y%m%d%H%M") -m $1 $2
-}
+
+# Kube
+alias k="kubectl"
 kcs(){
-  k config use-context $1
+  k config use-context $1 # TODO: I dont like this one
 }
 klogs() {
-  k logs -f $1
+  k logs -f $1 # Pod ID/name/etc
 }
 alias kgp="k get pods"
-alias pharmlogs="d logs -f $(dps | grep pharmakon-dev | awk '{ print substr($1, /(\w+)?/) }')"
+
+# GIT
+alias g="git"
+alias gs="g status"
+alias gcb="g checkout -b" # + branch name
+gtrc(){
+  full_tag=rc/$(date +"%Y%m%d%H%M")
+  g tag -a $full_tag -m $1 $2 # [Message, <commit hash>]
+  echo $full_tag
+}
+gtpr(){
+  full_tag=release/$(date +"%Y%m%d%H%M")
+  g tag -a $full_tag -m $1 $2 # [Message, <commit hash>]
+  echo $full_tag
+}
+alias mas="g pull origin master"
+alias push="g push origin" # + branch name
+alias pull="g pull origin" # + branch name
+alias fetch="g fetch"
+
+# CAPSULE
+alias pharmlogs="d logs -f $(dps | grep pharmakon-dev | awk '{ print substr($1, /(\w+)?/) }')" # TODO: this might be broken
 sandbox() {
   read "answer?Are you sure? (yn) "
-  echo    # (optional) move to a new line
+  echo
   if [[ $answer =~ ^[Yy]$ ]]
   then
     echo "git branch -D sandbox ...";
@@ -155,12 +173,13 @@ sandbox() {
     echo "current repo pushed to sandbox.";
   fi
 }
+
+# ZSHRC
+alias cpzsh="cp ~/.zshrc ."
 alias srczsh="source ~/.zshrc"
 alias zshconfig="code ~/.zshrc"
 
 # Artifactory Config
-export ARTIFACTORY_CREDENTIALS_USR=
-export ARTIFACTORY_CREDENTIALS_PSW=
 
 # Java Config
 export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home
