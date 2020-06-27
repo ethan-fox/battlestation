@@ -39,4 +39,4 @@
 
     `brew cask install font-fira-code`
 
-0. 
+0. [Github SSH setup](https://help.github.com/en/github/authenticating-to-github/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent)
