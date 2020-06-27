@@ -1,0 +1,8 @@
+{
+    "window.zoomLevel": 1,
+    "editor.cursorBlinking": "smooth",
+    "editor.cursorStyle": "block",
+    "editor.minimap.scale": 2,
+    "editor.fontFamily": "Fira Code", 
+    "editor.fontLigatures": true
+}
