@@ -9,7 +9,7 @@ fi
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
+export ZSH="/Users/ethansmbp/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -172,7 +172,13 @@ sandbox() {
 # ZSHRC
 alias cpvs="cp $HOME/Library/Application\ Support/Code/User/settings.json ."
 alias srczsh="source ~/.zshrc"
+alias ws="cd ~/Desktop/code"
 alias zshconfig="code ~/.zshrc"
+
+# MISC.
+# Skip forward/back a word with opt-arrow
+bindkey '[C' forward-word
+bindkey '[D' backward-word
 
 # Artifactory Config
 
