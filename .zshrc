@@ -151,23 +151,6 @@ alias fetch="g fetch"
 
 # CAPSULE
 alias pharmlogs="d logs -f $(dps | grep pharmakon-dev | awk '{ print substr($1, /(\w+)?/) }')" # TODO: this might be broken
-sandbox() {
-  read "answer?Are you sure? (yn) "
-  echo
-  if [[ $answer =~ ^[Yy]$ ]]
-  then
-    echo "git branch -D sandbox ...";
-    git branch -D sandbox;
-    sleep 1;
-    echo "git branch sandbox ...";
-    git branch sandbox;
-    sleep 1;
-    echo "git push origin sandbox -f ...";
-    git push origin sandbox -f;
-    sleep 1;
-    echo "current repo pushed to sandbox.";
-  fi
-}
 
 # ZSHRC
 alias cpvs="cp $HOME/Library/Application\ Support/Code/User/settings.json ."
