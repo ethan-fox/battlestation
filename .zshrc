@@ -6,7 +6,8 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
+# export PATH=/Users/ethansmbp/.sdkman/candidates/gradle/current/bin:/Users/ethansmbp/.avn/bin:/Users/ethansmbp/.nvm/versions/node/v14.16.0/bin:/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
 export ZSH="/Users/ethansmbp/.oh-my-zsh"
@@ -102,6 +103,8 @@ source $ZSH/oh-my-zsh.sh
 #             ALIASES               #
 #####################################
 
+alias tf="terraform"
+
 # Containerz
 alias d="docker"
 dlogs() {
@@ -126,47 +129,94 @@ kcs(){
   k config use-context $1 # TODO: I dont like this one
 }
 klogs() {
-  k logs -f $1 # Pod ID/name/etc
+  k logs -f $1 -n $2 # [Pod ID/name/etc, <namespace>]
 }
 alias kgp="k get pods"
+ktx() {
+  if [ "$1" = "devtest" ];
+  then
+    kubectx arn:aws:eks:us-east-1:874873923888:cluster/devtest
+  elif [ "$1" = "prod" ];
+  then
+    kubectx arn:aws:eks:us-east-1:874873923888:cluster/prd-internal
+  fi
+}
 
 # GIT
 alias g="git"
 alias gs="g status"
 alias gcb="g checkout -b" # + branch name
+alias gcm="g commit -m" # + commit message
 gtrc(){
-  full_tag=rc/$(date +"%Y%m%d%H%M")
-  g tag -a $full_tag -m $1 $2 # [Message, <commit hash>]
+  full_tag=rc/$(date -u +"%Y%m%d%H%MZ")
+  g tag -a $full_tag -m $1 $2 # [ Message, <commit hash> ]
   echo $full_tag
 }
 gtpr(){
-  full_tag=release/$(date +"%Y%m%d%H%M")
-  g tag -a $full_tag -m $1 $2 # [Message, <commit hash>]
+  full_tag=release/$(date -u +"%Y%m%d%H%MZ")
+  g tag -a $full_tag -m $1 $2 # [ Message, <commit hash> ]
   echo $full_tag
 }
-alias mas="g pull origin master"
 alias push="g push origin" # + branch name
 alias pull="g pull origin" # + branch name
 alias fetch="g fetch"
+alias reset-sandbox="g reset --hard origin/sandbox"
+alias reset-dev="g reset --hard origin/dev"
 
 # CAPSULE
 alias pharmlogs="d logs -f $(dps | grep pharmakon-dev | awk '{ print substr($1, /(\w+)?/) }')" # TODO: this might be broken
+
+# WORKFLOWS
+# Quick local pharmakon health-check: look for “password”:
+alias phealth="curl http://localhost:8000/carekit/login/?next=/carekit/"
+# List your AWS queues (localstack); also way of doing Localstack healthcheck
+alias qlist="echo 'aws sqs list-queues --endpoint-url=http://localhost:4576' && aws sqs list-queues --endpoint-url=http://localhost:4576"
+# Get number of messages on a queue -- helpful if you need to debug where messages may be ending up
+function qnum(){
+  aws sqs get-queue-attributes --endpoint-url=http://localhost:4576 --queue-url http://localhost:4576/queue/"$@" --attribute-names ApproximateNumberOfMessages QueueArn
+}
+# Purge your AWS localstack Queues (update as queues change):
+function purgequeue(){
+  echo "Purging $@"
+  aws sqs purge-queue --endpoint-url=http://localhost:4576 --queue-url http://localhost:4576/queue/"$@"
+}
+function qpurge(){
+  purgequeue "test_deadletter.fifo"
+  purgequeue "review.fifo"
+  purgequeue "precheck_trigger.fifo"
+  purgequeue "notify_pharmacy_trigger.fifo"
+  purgequeue "executor.fifo"
+  purgequeue "orchestrator.fifo"
+}
+
+# Misc.
+function pclear(){
+  kill $(lsof -ti:$1)
+}
+
+# Config
+export ARTIFACTORY_CREDENTIALS_USR=
+export ARTIFACTORY_CREDENTIALS_PSW=
+export HOMEBREW_GITHUB_API_TOKEN=
+export GITHUB_USER=
+export GITHUB_TOKEN=
+
 
 # ZSHRC
 alias cpvs="cp $HOME/Library/Application\ Support/Code/User/settings.json ."
 alias srczsh="source ~/.zshrc"
 alias ws="cd ~/Desktop/code"
 alias zshconfig="code ~/.zshrc"
+export EDITOR="vim"
 
 # MISC.
 # Skip forward/back a word with opt-arrow
 bindkey '[C' forward-word
 bindkey '[D' backward-word
-
-# Artifactory Config
+alias py-s="code -n ~/Desktop/code/playground.py && cd ~/Desktop/code"
 
 # Java Config
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-11.jdk/Contents/Home
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-12.jdk/Contents/Home # ???
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -176,6 +226,15 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 [[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
+
+# Pillow is dumb
+export CPATH=`xcrun --show-sdk-path`/usr/include
+
+# Go is pretty weird, too
+export GOPATH=$HOME/go
+export GOROOT=/usr/local/go
+export PATH=$PATH:$HOME/go/bin
+export PATH=$PATH:/usr/local/go/bin # ???
 
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="/Users/ethansmbp/.sdkman"
