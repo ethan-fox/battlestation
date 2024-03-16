@@ -5,12 +5,8 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
   source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
 fi
 
-# If you come from bash you might have to change your $PATH.
-# export PATH=/Users/ethansmbp/.sdkman/candidates/gradle/current/bin:/Users/ethansmbp/.avn/bin:/Users/ethansmbp/.nvm/versions/node/v14.16.0/bin:/Library/Frameworks/Python.framework/Versions/3.8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-export PATH=$HOME/bin:/usr/local/bin:$PATH
-
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/ethansmbp/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -22,7 +18,7 @@ POWERLEVEL9K_MODE="awesome-patched"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in ~/.oh-my-zsh/themes/
+# a theme from this variable instead of looking in $ZSH/themes/
 # If set to an empty array, this variable will have no effect.
 # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
 
@@ -33,17 +29,16 @@ POWERLEVEL9K_MODE="awesome-patched"
 # Case-sensitive completion must be off. _ and - will be interchangeable.
 # HYPHEN_INSENSITIVE="true"
 
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
-
-# Uncomment the following line to automatically update without prompting.
-# DISABLE_UPDATE_PROMPT="true"
+# Uncomment one of the following lines to change the auto-update behavior
+# zstyle ':omz:update' mode disabled  # disable automatic updates
+# zstyle ':omz:update' mode auto      # update automatically without asking
+# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 
 # Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
+# zstyle ':omz:update' frequency 13
 
 # Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS=true
+# DISABLE_MAGIC_FUNCTIONS="true"
 
 # Uncomment the following line to disable colors in ls.
 # DISABLE_LS_COLORS="true"
@@ -55,6 +50,9 @@ POWERLEVEL9K_MODE="awesome-patched"
 # ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
+# You can also set it to another string to have that shown instead of the default red dots.
+# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
+# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
 # COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
@@ -74,8 +72,8 @@ POWERLEVEL9K_MODE="awesome-patched"
 # ZSH_CUSTOM=/path/to/new-custom-folder
 
 # Which plugins would you like to load?
-# Standard plugins can be found in ~/.oh-my-zsh/plugins/*
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git)
@@ -99,6 +97,15 @@ source $ZSH/oh-my-zsh.sh
 # Compilation flags
 # export ARCHFLAGS="-arch x86_64"
 
+# Set personal aliases, overriding those provided by oh-my-zsh libs,
+# plugins, and themes. Aliases can be placed here, though oh-my-zsh
+# users are encouraged to define aliases within the ZSH_CUSTOM folder.
+# For a full list of active aliases, run `alias`.
+#
+# Example aliases
+# alias zshconfig="mate ~/.zshrc"
+# alias ohmyzsh="mate ~/.oh-my-zsh"
+
 #####################################
 #             ALIASES               #
 #####################################
@@ -106,6 +113,7 @@ source $ZSH/oh-my-zsh.sh
 alias tf="terraform"
 
 # Containerz
+alias cs="colima start --memory 6"
 alias d="docker"
 dlogs() {
   d logs -f $1
@@ -126,88 +134,80 @@ alias dpsa="d ps -a"
 # Kube
 alias k="kubectl"
 kcs(){
-  k config use-context $1 # TODO: I dont like this one
+  ENV=$1
+
+  # Set project
+
+  if [ "${ENV}" = "npd-bdata" ]; then
+    project="mlb-bdata-npd-bc33"
+  elif [ "${ENV}" = "prod-bdata" ]; then
+    project="mlb-bdata-prod-eba6"
+  elif [ "${ENV}" = "npd-streaming" ]; then
+    project="mlb-streaming-npd-68b7"
+  elif [ "${ENV}" = "prod-streaming" ]; then
+    project="mlb-streaming-prod-4605"
+  else
+    echo "Invalid env - must be sbx, npd, or prod"
+  fi
+
+  ## List Cluster and Region
+
+  gcloud config set project $project
+
+  CLUSTER_INFO=$(gcloud container clusters list | awk NR\>1 | head -1 | awk {'print $1 " " $2'})
+  CLUSTER=$(echo $CLUSTER_INFO | awk {'print $1'})
+  REGION=$(echo $CLUSTER_INFO | awk {'print $2'})
+
+  echo "Setting cluster as ${CLUSTER}, region ${REGION}"
+
+  ## Set up kubectl
+  gcloud container clusters get-credentials $CLUSTER --region $REGION
 }
 klogs() {
   k logs -f $1 -n $2 # [Pod ID/name/etc, <namespace>]
 }
+alias kg="k get"
+alias kd="k describe"
 alias kgp="k get pods"
-ktx() {
-  if [ "$1" = "devtest" ];
-  then
-    kubectx arn:aws:eks:us-east-1:874873923888:cluster/devtest
-  elif [ "$1" = "prod" ];
-  then
-    kubectx arn:aws:eks:us-east-1:874873923888:cluster/prd-internal
-  fi
-}
+alias kgd="k get deployments"
+alias kdp="k describe pods"
+
 
 # GIT
 alias g="git"
 alias gs="g status"
 alias gcb="g checkout -b" # + branch name
 alias gcm="g commit -m" # + commit message
-gtrc(){
-  full_tag=rc/$(date -u +"%Y%m%d%H%MZ")
-  g tag -a $full_tag -m $1 $2 # [ Message, <commit hash> ]
-  echo $full_tag
-}
-gtpr(){
-  full_tag=release/$(date -u +"%Y%m%d%H%MZ")
-  g tag -a $full_tag -m $1 $2 # [ Message, <commit hash> ]
-  echo $full_tag
-}
 alias push="g push origin" # + branch name
 alias pull="g pull origin" # + branch name
 alias fetch="g fetch"
-alias reset-sandbox="g reset --hard origin/sandbox"
-alias reset-dev="g reset --hard origin/dev"
+# alias reset-sandbox="g reset --hard origin/sandbox"
+# alias reset-dev="g reset --hard origin/dev"
 
-# CAPSULE
-alias pharmlogs="d logs -f $(dps | grep pharmakon-dev | awk '{ print substr($1, /(\w+)?/) }')" # TODO: this might be broken
-
-# WORKFLOWS
-# Quick local pharmakon health-check: look for “password”:
-alias phealth="curl http://localhost:8000/carekit/login/?next=/carekit/"
-# List your AWS queues (localstack); also way of doing Localstack healthcheck
-alias qlist="echo 'aws sqs list-queues --endpoint-url=http://localhost:4576' && aws sqs list-queues --endpoint-url=http://localhost:4576"
-# Get number of messages on a queue -- helpful if you need to debug where messages may be ending up
-function qnum(){
-  aws sqs get-queue-attributes --endpoint-url=http://localhost:4576 --queue-url http://localhost:4576/queue/"$@" --attribute-names ApproximateNumberOfMessages QueueArn
-}
-# Purge your AWS localstack Queues (update as queues change):
-function purgequeue(){
-  echo "Purging $@"
-  aws sqs purge-queue --endpoint-url=http://localhost:4576 --queue-url http://localhost:4576/queue/"$@"
-}
-function qpurge(){
-  purgequeue "test_deadletter.fifo"
-  purgequeue "review.fifo"
-  purgequeue "precheck_trigger.fifo"
-  purgequeue "notify_pharmacy_trigger.fifo"
-  purgequeue "executor.fifo"
-  purgequeue "orchestrator.fifo"
-}
+# tmux
+alias t="tmux"
+alias tn="t new -s"
+alias ta="t attach -t "
+alias tk="t kill-session -t"
 
 # Misc.
 function pclear(){
-  kill $(lsof -ti:$1)
+  kill -9 $(lsof -ti:$1)
 }
 
-# Config
-export ARTIFACTORY_CREDENTIALS_USR=
-export ARTIFACTORY_CREDENTIALS_PSW=
-export HOMEBREW_GITHUB_API_TOKEN=
-export GITHUB_USER=
-export GITHUB_TOKEN=
-
+# Sporty CLI
+export SPORTY_GH_AUTH_TOKEN="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"
+export SPORTY_STREAMING_APP_CONFIG_PATH="/Users/ethan.fox/Desktop/code/application-config-streaming"
 
 # ZSHRC
 alias cpvs="cp $HOME/Library/Application\ Support/Code/User/settings.json ."
 alias srczsh="source ~/.zshrc"
 alias ws="cd ~/Desktop/code"
-alias zshconfig="code ~/.zshrc"
+alias zshconfig="code -n ~/.zshrc"
 export EDITOR="vim"
+
+# MLB
+alias s="sporty"
 
 # MISC.
 # Skip forward/back a word with opt-arrow
@@ -216,26 +216,37 @@ bindkey '[D' backward-word
 alias py-s="code -n ~/Desktop/code/playground.py && cd ~/Desktop/code"
 
 # Java Config
-export JAVA_HOME=/Library/Java/JavaVirtualMachines/adoptopenjdk-12.jdk/Contents/Home # ???
+export JAVA_HOME='/usr/libexec/java_home -v 1.8.321.07'
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
-source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+# syntax highlighting
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+
+# Java path - switch b/w versions
+export JAVA_HOME=/opt/homebrew/opt/openjdk@11
+# export JAVA_HOME=/opt/homebrew/Cellar/openjdk@17
+
+# Rust
+case ":${PATH}:" in
+    *:"$HOME/.cargo/bin":*)
+        ;;
+    *)
+        # Prepending path in case a system-installed rustc needs to be overridden
+        export PATH="$HOME/.cargo/bin:$PATH"
+        ;;
+esac
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/ethan.fox/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/ethan.fox/Downloads/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/ethan.fox/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/ethan.fox/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-[[ -s "$HOME/.avn/bin/avn.sh" ]] && source "$HOME/.avn/bin/avn.sh" # load avn
-
-# Pillow is dumb
-export CPATH=`xcrun --show-sdk-path`/usr/include
-
-# Go is pretty weird, too
-export GOPATH=$HOME/go
-export GOROOT=/usr/local/go
-export PATH=$PATH:$HOME/go/bin
-export PATH=$PATH:/usr/local/go/bin # ???
-
-#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-export SDKMAN_DIR="/Users/ethansmbp/.sdkman"
-[[ -s "/Users/ethansmbp/.sdkman/bin/sdkman-init.sh" ]] && source "/Users/ethansmbp/.sdkman/bin/sdkman-init.sh"
