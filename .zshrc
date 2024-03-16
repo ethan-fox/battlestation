@@ -195,10 +195,6 @@ function pclear(){
   kill -9 $(lsof -ti:$1)
 }
 
-# Sporty CLI
-export SPORTY_GH_AUTH_TOKEN="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"
-export SPORTY_STREAMING_APP_CONFIG_PATH="/Users/ethan.fox/Desktop/code/application-config-streaming"
-
 # ZSHRC
 alias cpvs="cp $HOME/Library/Application\ Support/Code/User/settings.json ."
 alias srczsh="source ~/.zshrc"
